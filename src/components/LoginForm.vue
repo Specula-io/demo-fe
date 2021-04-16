@@ -53,6 +53,7 @@ export default {
       }).then(resp => {
         const {token, user} = resp.data
         localStorage.setItem('id_token', token)
+        this.$axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('id_token');
         this.$store.dispatch('signIn', {
           token: token,
           user: user,
