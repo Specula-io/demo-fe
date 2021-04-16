@@ -122,13 +122,11 @@ export default {
       promises.push(this.$axios.get('/countries'));
       promises.push(this.$axios.get('/states'));
       promises.push(this.$axios.get('/cities'));
-      promises.push(this.$axios.get('/cinemas'));
       Promise.all(promises)
-          .then(([ countries, states, cities, cinemas]) =>{
+          .then(([ countries, states, cities]) =>{
             this.countriesList = countries.data
             this.statesList = states.data;
             this.citiesList = cities.data
-            this.cinemasList = cinemas.data
           })
           .catch(([errorCountries, errorStates, errorCities, errorCinemas]) => {
             console.error(errorCountries)
@@ -144,16 +142,26 @@ export default {
         ticketCount: this.ticketCount,
       })
     },
-    getCinema(val) {
+    async getCinema(val) {
       const states = this.statesList.filter(state => state.country_id === val)
       const citiesIds = states.reduce((_, state) => ([ ..._, ...state.cities ]), []);
-      const cinemasIds = this.citiesList.reduce((_, city) => {
+      /* const cinemasIds = this.citiesList.reduce((_, city) => {
         if(citiesIds.includes(city._id)) {
           return [..._, ...city.cinemas];
         }
         return _;
-      }, []);
-      this.possibleCinemas = this.cinemasList.filter(c => cinemasIds.includes(c._id));
+      }, []); */
+      
+      let getCities = citiesIds.map(cityId => {
+        return this.$axios.get(`/cinemas?cityId=${cityId}`);
+      });
+      
+      let cinemas = (await Promise.all(getCities)).flat().map(res => res.data).flat()
+      
+      this.cinemasList = cinemas;
+      this.possibleCinemas = cinemas;
+      
+      // this.possibleCinemas = this.cinemasList.filter(c => cinemasIds.includes(c._id));
       this.possibleMovies = []
       this.cinema = null
       this.movie = null
