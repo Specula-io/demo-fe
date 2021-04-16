@@ -38,7 +38,7 @@
         <b-form-group
             v-if="possibleMovies.length"
             id="input-group-3"
-            label="Select cinemas:"
+            label="Select Movie"
             label-for="movie"
         >
           <b-form-select
