@@ -1,87 +1,68 @@
 <template>
   <div class="TicketChoice">
     <b-container class="d-flex justify-content-center">
-      <b-form class="w-50 text-left" @submit.prevent="sendTicket">
-
-        <b-form-group
+      <b-form class="w-100 text-left" @submit.prevent="sendTicket">
+        <div class="d-flex justify-content-between">
+          <b-form-group
+            class="w-45"
             id="input-group-1"
             label="Select country:"
             label-for="country"
-        >
-          <b-form-select
+          >
+            <b-form-select
               :options="countriesList"
               id="country"
               value-field="_id"
               text-field="name"
               v-model="country"
               required
-          ></b-form-select>
-        </b-form-group>
-
-        <b-form-group
+            ></b-form-select>
+          </b-form-group>
+          <b-form-group
+            class="w-45"
             v-if="possibleCinemas.length"
             id="input-group-2"
             label="Select cinemas:"
             label-for="cinema"
             :description="showDescCinemas"
-        >
-          <b-form-select
+          >
+            <b-form-select
               :options="possibleCinemas"
               id="cinema"
               value-field="_id"
               text-field="name"
               v-model="cinema"
               required
-          ></b-form-select>
-        </b-form-group>
+            ></b-form-select>
+          </b-form-group>
+        </div>
 
-        <b-form-group
-            v-if="possibleMovies.length"
-            id="input-group-3"
-            label="Select cinemas:"
-            label-for="movie"
-        >
-          <b-form-select
-              :options="possibleMovies"
-              id="movie"
-              value-field="id"
-              text-field="title"
-              v-model="movie"
-              required
-          ></b-form-select>
-        </b-form-group>
+        <div v-if="possibleMovies.length" class="movies">
+            <movie-item
+              v-for="movie in possibleMovies"
+              :key="movie.id"
+              :movie="movie"
+              @buyTickets="(val) => sendTicket(val)"
+            ></movie-item>
+        </div>
 
-        <b-form-group
-            v-if="movie"
-            id="input-group-4"
-            label="Select count ticked:"
-            label-for="ticketCount"
-        >
-          <b-form-input
-              v-model="ticketCount"
-              id="ticketCount"
-              type="number"
-              min="1"
-              max="12"
-          ></b-form-input>
-        </b-form-group>
-
-        <b-button variant="primary" type="submit" v-show="formCompleted">Send</b-button>
       </b-form>
     </b-container>
   </div>
 </template>
 
 <script>
+import MovieItem from "./MovieItem";
 
 export default {
   name: "TicketChoice",
+  components: {MovieItem},
+  comments: {MovieItem},
   data() {
     return {
       country: null,
       cinema: null,
       movie: null,
-      ticketCount: 1,
       hasMovies: true,
 
       countriesList: [],
@@ -94,9 +75,6 @@ export default {
     }
   },
   computed: {
-    formCompleted() {
-      return this.country && this.cinema && this.movie && this.ticketCount !== 0
-    },
     showDescCinemas() {
       return !this.hasMovies? 'There are no movies in the selected cinema': ''
     }
@@ -124,24 +102,24 @@ export default {
       promises.push(this.$axios.get('/cities'));
       promises.push(this.$axios.get('/cinemas'));
       Promise.all(promises)
-          .then(([ countries, states, cities, cinemas]) =>{
-            this.countriesList = countries.data
-            this.statesList = states.data;
-            this.citiesList = cities.data
-            this.cinemasList = cinemas.data
-          })
-          .catch(([errorCountries, errorStates, errorCities, errorCinemas]) => {
-            console.error(errorCountries)
-            console.error(errorStates)
-            console.error(errorCities)
-            console.error(errorCinemas)
-          })
+        .then(([ countries, states, cities, cinemas]) =>{
+          this.countriesList = countries.data
+          this.statesList = states.data;
+          this.citiesList = cities.data
+          this.cinemasList = cinemas.data
+        })
+        .catch(([errorCountries, errorStates, errorCities, errorCinemas]) => {
+          console.error(errorCountries)
+          console.error(errorStates)
+          console.error(errorCities)
+          console.error(errorCinemas)
+        })
     },
-    sendTicket() {
+    sendTicket(data) {
       this.$store.dispatch('setTicket', {
         cinema: this.cinemasList.find(cinema => cinema._id === this.cinema),
-        movie: this.possibleMovies.find(movie => movie.id === this.movie),
-        ticketCount: this.ticketCount,
+        movie: data.movie,
+        ticketCount: data.ticketCount,
       })
     },
     getCinema(val) {
@@ -160,19 +138,22 @@ export default {
       this.hasMovies = true
     },
     getMovies(val) {
+      console.log(val)
       this.$axios
-          .get(`/cinemas/${val}`)
-          .then(resp => {
-            if(resp.data.cinemaPremieres) {
-              this.possibleMovies = resp.data.cinemaPremieres
-              this.hasMovies = true
-            }else{
-              this.hasMovies = false
-            }
-          })
-          .catch(e => {
-            console.error(e)
-          })
+        .get(`/cinemas/${val}`)
+        .then(resp => {
+          if(resp.data.cinemaPremieres) {
+            this.possibleMovies = resp.data.cinemaPremieres
+            console.log("possibleMovies : ", this.possibleMovies)
+
+            this.hasMovies = true
+          }else{
+            this.hasMovies = false
+          }
+        })
+        .catch(e => {
+          console.error(e)
+        })
       this.movie = null
     }
   }
@@ -180,5 +161,15 @@ export default {
 </script>
 
 <style scoped>
+.w-45{
+  width: 45%;
+}
+.movies{
+  display: inline-flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 5%;
+}
+
 
 </style>

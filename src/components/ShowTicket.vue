@@ -6,8 +6,10 @@
       </b-card-text>
       <b-card-text>
         <h4>Movies: {{ ticket.movie.title }}</h4>
+        <b-img v-if="ticket.movie.poster.includes('http')" :src="ticket.movie.poster" alt="Image 1"></b-img>
         <p>Plot: {{ ticket.movie.plot }}</p>
         <p>Movie time: {{ ticket.movie.runtime }}min.</p>
+        <p>Count tickets: {{ ticket.ticketCount }}</p>
         <p>Payment Method: {{ ticket.paymentMethod }}</p>
       </b-card-text>
     </b-card>

@@ -1,9 +1,10 @@
 <template>
   <div>
-    <b-navbar style="height: 50px" toggleable="lg" type="dark" variant="info">
+    <b-navbar style="height: 70px" toggleable="lg" type="dark" variant="info">
       <b-container>
+        <b-navbar-brand href="#" style="font-weight: bold; font-size: 32px">Cinema</b-navbar-brand>
         <b-navbar-nav class="ml-auto">
-          <b-nav-item v-if="userAuth" @click="logout">Logout</b-nav-item>
+          <b-nav-item  v-if="userAuth" @click="logout">Logout</b-nav-item>
         </b-navbar-nav>
       </b-container>
     </b-navbar>
