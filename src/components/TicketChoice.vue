@@ -1,7 +1,7 @@
 <template>
   <div class="TicketChoice">
     <b-container class="d-flex justify-content-center">
-      <b-form class="w-100 text-left" @submit.prevent="sendTicket">
+      <b-form class="w-100 text-left">
         <div class="d-flex justify-content-between">
           <b-form-group
             class="w-45"
@@ -57,7 +57,6 @@ import MovieItem from "./MovieItem";
 export default {
   name: "TicketChoice",
   components: {MovieItem},
-  comments: {MovieItem},
   data() {
     return {
       country: null,
@@ -100,19 +99,16 @@ export default {
       promises.push(this.$axios.get('/countries'));
       promises.push(this.$axios.get('/states'));
       promises.push(this.$axios.get('/cities'));
-      promises.push(this.$axios.get('/cinemas'));
       Promise.all(promises)
-        .then(([ countries, states, cities, cinemas]) =>{
+        .then(([ countries, states, cities]) =>{
           this.countriesList = countries.data
           this.statesList = states.data;
           this.citiesList = cities.data
-          this.cinemasList = cinemas.data
         })
-        .catch(([errorCountries, errorStates, errorCities, errorCinemas]) => {
+        .catch(([errorCountries, errorStates, errorCities]) => {
           console.error(errorCountries)
           console.error(errorStates)
           console.error(errorCities)
-          console.error(errorCinemas)
         })
     },
     sendTicket(data) {
@@ -122,30 +118,37 @@ export default {
         ticketCount: data.ticketCount,
       })
     },
-    getCinema(val) {
+    async getCinema(val) {
       const states = this.statesList.filter(state => state.country_id === val)
       const citiesIds = states.reduce((_, state) => ([ ..._, ...state.cities ]), []);
-      const cinemasIds = this.citiesList.reduce((_, city) => {
+      /* const cinemasIds = this.citiesList.reduce((_, city) => {
         if(citiesIds.includes(city._id)) {
           return [..._, ...city.cinemas];
         }
         return _;
-      }, []);
-      this.possibleCinemas = this.cinemasList.filter(c => cinemasIds.includes(c._id));
+      }, []); */
+
+      let getCities = citiesIds.map(cityId => {
+        return this.$axios.get(`/cinemas?cityId=${cityId}`);
+      });
+
+      let cinemas = (await Promise.all(getCities)).flat().map(res => res.data).flat()
+
+      this.cinemasList = cinemas;
+      this.possibleCinemas = cinemas;
+
+      // this.possibleCinemas = this.cinemasList.filter(c => cinemasIds.includes(c._id));
       this.possibleMovies = []
       this.cinema = null
       this.movie = null
       this.hasMovies = true
     },
     getMovies(val) {
-      console.log(val)
       this.$axios
         .get(`/cinemas/${val}`)
         .then(resp => {
           if(resp.data.cinemaPremieres) {
             this.possibleMovies = resp.data.cinemaPremieres
-            console.log("possibleMovies : ", this.possibleMovies)
-
             this.hasMovies = true
           }else{
             this.hasMovies = false
