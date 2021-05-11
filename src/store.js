@@ -39,6 +39,11 @@ export default new Vuex.Store({
                 paymentMethod: state.paymentMethod
             }
         },
+        getUser(state) {
+            return {
+                ...state.user
+            };
+        }
     },
     actions: {
         signIn({ commit }, { token, isAuth, user }) {
